@@ -2,6 +2,7 @@ import javafx.animation.AnimationTimer;
 import javafx.application.Application;
 import javafx.geometry.Point2D;
 import javafx.scene.Scene;
+import javafx.scene.control.Button;
 import javafx.scene.input.KeyCode;
 import javafx.scene.layout.Pane;
 import javafx.scene.shape.Polygon;
@@ -19,10 +20,14 @@ public class AsteroidsApplication extends Application {
     @Override
     public void start(Stage stage) throws Exception {
         Pane pane = new Pane();
-        Text text = new Text(10, 20, "Points: 0");
-        pane.getChildren().add(text);
+        Button button = new Button("Retry");
 
         AtomicInteger points = new AtomicInteger();
+
+        Text text = new Text(10, 20, "Points: 0");
+        Text finalText = new Text(110, 80, "GAME OVER");
+
+        pane.getChildren().add(text);
 
         pane.setPrefSize(WIDTH, HEIGHT);
 
@@ -72,9 +77,86 @@ public class AsteroidsApplication extends Application {
                 asteroids.forEach(asteroid -> asteroid.move());
                 projectiles.forEach(projectile -> projectile.move());
 
+                List<Asteroid> aEliminar = new ArrayList<>();
+
+                asteroids.forEach(asteroid -> {
+                    if (ship.collide(asteroid)) {
+                        aEliminar.add(asteroid);
+                    }
+                });
+
+                if (!aEliminar.isEmpty()) {
+                    this.stop();
+
+                    // Limpieza
+                    asteroids.forEach(a -> pane.getChildren().remove(a.getCharacter()));
+                    asteroids.clear();
+                    projectiles.forEach(p -> pane.getChildren().remove(p.getCharacter()));
+                    projectiles.clear();
+                    pane.getChildren().remove(ship.getCharacter());
+
+                    // UI
+                    text.setTranslateX(100);
+                    text.setTranslateY(80);
+                    if (!pane.getChildren().contains(button)) {
+                        pane.getChildren().addAll(finalText, button);
+                    }
+                    button.setTranslateX(110);
+                    button.setTranslateY(110);
+
+                    button.setOnAction(event -> {
+                        pane.getChildren().removeAll(finalText, button);
+                        points.set(0);
+                        text.setText("Points: 0");
+                        text.setTranslateX(0);
+                        text.setTranslateY(0);
+
+                        ship.setMovement(new Point2D(0, 0));
+                        ship.getCharacter().setRotate(0);
+                        ship.getCharacter().setTranslateX(WIDTH / 2);
+                        ship.getCharacter().setTranslateY(HEIGHT / 2);
+                        pane.getChildren().add(ship.getCharacter());
+
+                        for (int i = 0; i < 5; i++) {
+                            Asteroid a = new Asteroid(new Random().nextInt(WIDTH / 3), new Random().nextInt(HEIGHT));
+                            asteroids.add(a);
+                            pane.getChildren().add(a.getCharacter());
+                        }
+                        this.start();
+                    });
+                }
+
                 asteroids.forEach(asteroid-> {
                     if (ship.collide(asteroid)) {
+                        pane.getChildren().remove(ship.getCharacter());
+                        asteroids.forEach(a -> pane.getChildren().remove(a.getCharacter()));
+                        asteroids.clear();
+                        projectiles.forEach(p -> pane.getChildren().remove(p.getCharacter()));
+                        projectiles.clear();
                         stop();
+                        text.setTranslateX(100);
+                        text.setTranslateY(80);
+                        pane.getChildren().add(finalText);
+                        pane.getChildren().add(button);
+                        button.setTranslateX(110);
+                        button.setTranslateY(110);
+                        button.setOnAction(event -> {
+                            pane.getChildren().remove(finalText);
+                            pane.getChildren().remove(button);
+                            pane.getChildren().remove(text);
+                            points.set(0);
+                            ship.getCharacter().setTranslateX(WIDTH/2);
+                            ship.getCharacter().setTranslateY(HEIGHT/2);
+                            ship.setMovement(new Point2D(0, 0));
+                            ship.getCharacter().setRotate(0);
+                            pane.getChildren().add(ship.getCharacter());
+                            for(int i = 0; i < 5; i++){
+                                Asteroid asteroid1 = new Asteroid(new Random().nextInt(WIDTH / 3), new Random().nextInt(HEIGHT));
+                                asteroids.add(asteroid1);
+                                pane.getChildren().add(asteroid1.getCharacter());
+                            }
+                            this.start();
+                        });
                     }
                 });
                 if(pressedKeys.getOrDefault(KeyCode.SPACE, false) && projectiles.size() < 3){
