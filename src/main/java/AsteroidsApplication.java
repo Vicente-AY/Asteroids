@@ -87,34 +87,7 @@ public class AsteroidsApplication extends Application {
 
                     pane.getChildren().add(projectile.getCharacter());
                 }
-                projectiles.forEach(projectile -> {
-                    List<Asteroid> collisions = asteroids.stream().filter(asteroid -> asteroid.collide(projectile)).collect(Collectors.toList());
-                    collisions.stream().forEach(collided ->{
-                        asteroids.remove(collided);
-                        pane.getChildren().remove(collided.getCharacter());
-                    });
-                });
-                List<Projectile> projectilesToRemove = projectiles.stream().filter(projectile -> {
-                    List<Asteroid> collisions = asteroids.stream()
-                            .filter(asteroid -> asteroid.collide(projectile))
-                            .collect(Collectors.toList());
 
-                    if(collisions.isEmpty()) {
-                        return false;
-                    }
-
-                    collisions.stream().forEach(collided -> {
-                        asteroids.remove(collided);
-                        pane.getChildren().remove(collided.getCharacter());
-                    });
-
-                    return true;
-                }).collect(Collectors.toList());
-
-                projectilesToRemove.forEach(projectile -> {
-                    pane.getChildren().remove(projectile.getCharacter());
-                    projectiles.remove(projectile);
-                });
                 projectiles.forEach(projectile -> {
                     asteroids.forEach(asteroid -> {
                         if(projectile.collide(asteroid)) {
@@ -122,6 +95,10 @@ public class AsteroidsApplication extends Application {
                             asteroid.setAlive(false);
                         }
                     });
+
+                    if(!projectile.isAlive()) {
+                        text.setText("Points: " + points.addAndGet(1000));
+                    }
                 });
 
                 projectiles.stream()
@@ -137,18 +114,7 @@ public class AsteroidsApplication extends Application {
                 asteroids.removeAll(asteroids.stream()
                         .filter(asteroid -> !asteroid.isAlive())
                         .collect(Collectors.toList()));
-                projectiles.forEach(projectile -> {
-                    asteroids.forEach(asteroid -> {
-                        if(projectile.collide(asteroid)) {
-                            projectile.setAlive(false);
-                            asteroid.setAlive(false);
-                        }
-                    });
 
-                    if(!projectile.isAlive()) {
-                        text.setText("Points: " + points.addAndGet(1000));
-                    }
-                });
                 if(Math.random() < 0.005) {
                     Asteroid asteroid = new Asteroid(WIDTH, HEIGHT);
                     if(!asteroid.collide(ship)) {
